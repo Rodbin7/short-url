@@ -1,0 +1,42 @@
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
+
+<script>
+    // Hacer que la función toast sea global para poder llamarla desde cualquier script
+    window.showToast = function(message, type = 'success') {
+        const container = document.getElementById('toast-container');
+        if (!container) return;
+
+        const toast = document.createElement('div');
+        const bgColor = type === 'success' ? 'bg-green-600' : 'bg-red-600';
+
+        toast.className = `p-4 rounded-lg shadow-lg text-white ${bgColor} animate-toast-in`;
+        toast.textContent = message;
+
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.classList.add('animate-toast-out');
+            toast.addEventListener('animationend', () => {
+                toast.remove();
+            });
+        }, 3000);
+    }
+</script>
+
+<style>
+    @keyframes toast-in {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    .animate-toast-in {
+        animation: toast-in 0.5s ease-out forwards;
+    }
+
+    @keyframes toast-out {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    .animate-toast-out {
+        animation: toast-out 0.5s ease-in forwards;
+    }
+</style>

@@ -1,0 +1,166 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Toast from '../components/Toast.astro';
+---
+
+<Layout title="Mis Enlaces">
+    <Toast />
+    <main class="container mx-auto px-4 pt-12 pb-12">
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-4xl font-bold">Mis Enlaces</h1>
+            <a href="/" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">+ Crear Nuevo</a>
+        </div>
+
+        <div id="links-container" class="space-y-4">
+            <!-- Los enlaces se cargarán aquí -->
+            <p id="loading-state" class="text-slate-400">Cargando enlaces...</p>
+        </div>
+    </main>
+</Layout>
+
+<script>
+    function setupDashboardPage() {
+        const pageContainer = document.querySelector('main');
+        if (pageContainer && pageContainer.dataset.initialized === 'true') {
+            return;
+        }
+        if (pageContainer) {
+            pageContainer.dataset.initialized = 'true';
+        }
+
+        // Helper para mostrar notificaciones
+        const showToast = (message, type) => {
+            if (typeof window.showToast === 'function') {
+                window.showToast(message, type);
+            } else {
+                console.warn('La función de Toast no está disponible.', { message, type });
+            }
+        };
+
+        // 1. Mostrar toast de registro si existe en localStorage
+        const toastMessage = localStorage.getItem('toastMessage');
+        const toastType = localStorage.getItem('toastType') || 'info';
+        if (toastMessage) {
+            // Usamos un pequeño retraso para asegurar que el componente Toast esté listo
+            setTimeout(() => {
+                showToast(toastMessage, toastType);
+                localStorage.removeItem('toastMessage');
+                localStorage.removeItem('toastType');
+            }, 100);
+        }
+
+        // 2. Redirigir si no hay token
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const linksContainer = document.getElementById('links-container');
+        const loadingState = document.getElementById('loading-state');
+
+        async function fetchLinks() {
+            // Prevenir que se añadan listeners de clic múltiples veces
+            if (!linksContainer || linksContainer.dataset.listenersAttached === 'true') return;
+            
+            try {
+                const response = await fetch(`/api/links`, {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.msg || 'No se pudieron cargar los enlaces.');
+                }
+
+                const links = await response.json();
+
+                if (loadingState) loadingState.remove();
+
+                if (links.length === 0) {
+                    linksContainer.innerHTML = '<p class="text-slate-400 text-center py-8">Aún no has creado ningún enlace.</p>';
+                    return;
+                }
+
+                linksContainer.innerHTML = links.map(link => {
+                    const shortUrl = `${window.location.origin}/r/${link.shortCode}`;
+                    return `
+                    <div id="link-${link._id}" class="bg-slate-800/50 border border-white/10 p-4 rounded-xl shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div class="flex-grow truncate mr-4">
+                            <p class="text-xs text-slate-400">${new Date(link.createdAt).toLocaleDateString()}</p>
+                            <a href="${link.originalUrl}" target="_blank" class="text-lg text-white hover:text-blue-400 truncate block" title="${link.originalUrl}">${link.originalUrl}</a>
+                        </div>
+                        <div class="flex items-center gap-4 flex-shrink-0">
+                            <a href="${shortUrl}" target="_blank" class="text-blue-400 hover:underline">${shortUrl.replace(/^https?:\/\//, '')}</a>
+                            <button data-short-url="${shortUrl}" class="copy-btn bg-slate-700/50 hover:bg-slate-600/50 text-slate-300 font-bold py-2 px-3 rounded-lg transition duration-300" title="Copiar enlace">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                            </button>
+                            <div class="text-center w-12">
+                                <p class="font-bold text-xl">${link.clicks}</p>
+                                <p class="text-xs text-slate-400">Clics</p>
+                            </div>
+                            <button data-link-id="${link._id}" class="delete-btn bg-red-800/50 hover:bg-red-700/50 text-red-400 font-bold py-2 px-3 rounded-lg transition duration-300" title="Eliminar enlace">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="pointer-events-none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+
+                linksContainer.dataset.listenersAttached = 'true';
+                linksContainer.addEventListener('click', async (e) => {
+                    const target = e.target;
+                    if (!(target instanceof HTMLElement)) return;
+
+                    const deleteButton = target.closest('.delete-btn');
+                    const copyButton = target.closest('.copy-btn');
+
+                    if (copyButton) {
+                        const urlToCopy = copyButton.getAttribute('data-short-url');
+                        if (urlToCopy) {
+                            try {
+                                await navigator.clipboard.writeText(urlToCopy);
+                                showToast('¡Enlace copiado!', 'success');
+                            } catch (err) {
+                                showToast('No se pudo copiar el enlace.', 'error');
+                            }
+                        }
+                    }
+
+                    if (deleteButton) {
+                        const linkId = deleteButton.getAttribute('data-link-id');
+                        if (linkId && confirm('¿Estás seguro de que quieres eliminar este enlace?')) {
+                            try {
+                                const deleteResponse = await fetch(`/api/links/${linkId}`, {
+                                    method: 'DELETE',
+                                    headers: { 'x-auth-token': token }
+                                });
+
+                                if (!deleteResponse.ok) {
+                                    const errorData = await deleteResponse.json().catch(() => ({}));
+                                    throw new Error(errorData.msg || 'No se pudo eliminar el enlace.');
+                                }
+
+                                document.getElementById(`link-${linkId}`)?.remove();
+                                showToast('Enlace eliminado correctamente.', 'success');
+
+                            } catch (err) {
+                                showToast(`Error al eliminar: ${err.message}`, 'error');
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                if (loadingState) loadingState.textContent = 'Error al cargar los enlaces.';
+                const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error desconocido';
+                showToast(`Error: ${errorMessage}`, 'error');
+            }
+        }
+
+        fetchLinks();
+    }
+
+    // 3. Corregido: Usar solo el listener de Astro para evitar doble ejecución
+    document.addEventListener('astro:page-load', setupDashboardPage);
+    document.addEventListener('DOMContentLoaded', setupDashboardPage);
+</script>

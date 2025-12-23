@@ -1,0 +1,114 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Toast from '../components/Toast.astro';
+---
+
+<Layout title="Registro de Usuario">
+	<Toast />
+	<main class="container mx-auto px-4 pt-24 pb-12">
+        <div class="max-w-md mx-auto">
+			<h1 class="text-4xl font-bold text-center mb-2 text-white">Crea tu Cuenta</h1>
+            <p class="text-center text-slate-400 mb-8">Regístrate para empezar a acortar enlaces.</p>
+
+			<form id="register-form" class="w-full bg-slate-800/50 border border-white/10 p-8 rounded-xl shadow-lg">
+				<div class="mb-4">
+					<label for="email" class="block text-slate-300 mb-2">Email</label>
+					<input type="email" id="email" name="email" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" required />
+				</div>
+				<div class="mb-6">
+					<label for="password" class="block text-slate-300 mb-2">Contraseña</label>
+					<input type="password" id="password" name="password" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" required minlength="6" />
+                    <p class="text-xs text-slate-500 mt-2">Mínimo 6 caracteres.</p>
+				</div>
+				<button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300">Crear Cuenta</button>
+			</form>
+
+			<p class="text-center text-slate-400 mt-6">¿Ya tienes una cuenta? <a href="/login" class="text-blue-400 hover:underline font-semibold">Inicia sesión aquí</a></p>
+		</div>
+	</main>
+
+	<script>
+		function setupRegisterPage() {
+			const registerForm = document.getElementById('register-form');
+			if (!registerForm || registerForm.dataset.initialized === 'true') {
+				return; // Salir si el form no existe o ya fue inicializado
+			}
+			registerForm.dataset.initialized = 'true';
+
+			// 1. Redirigir si el usuario ya está logueado
+			const token = localStorage.getItem('token');
+			if (token) {
+				window.location.href = '/dashboard';
+				return;
+			}
+
+			registerForm.addEventListener('submit', async (e) => {
+				e.preventDefault();
+
+				// Helper para mostrar notificaciones
+				const showToast = (message, type) => {
+					if (typeof window.showToast === 'function') {
+						window.showToast(message, type);
+					} else {
+						console.warn('La función de Toast no está disponible.', { message, type });
+					}
+				};
+
+				const form = e.target;
+				const emailInput = form.elements.namedItem('email');
+				const passwordInput = form.elements.namedItem('password');
+				const email = emailInput instanceof HTMLInputElement ? emailInput.value : '';
+				const password = passwordInput instanceof HTMLInputElement ? passwordInput.value : '';
+
+				// 2. Validación de cliente antes de enviar
+				if (!email || !password) {
+					showToast('Por favor, completa todos los campos.', 'error');
+					return;
+				}
+				if (password.length < 6) {
+					showToast('La contraseña debe tener al menos 6 caracteres.', 'error');
+					return;
+				}
+
+				try {
+					const response = await fetch(`/api/auth/register`, {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ email, password }),
+					});
+
+					// 4. Manejo de errores de red y respuestas no-JSON
+					let data = {};
+					try {
+						// Intentamos parsear el JSON, pero no fallamos si el cuerpo está vacío o no es JSON
+						data = await response.json();
+					} catch (jsonError) {
+						if (!response.ok) {
+							// Si la respuesta es un error (ej. 500) y no tiene JSON, creamos un error genérico
+							throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
+						}
+						// Si la respuesta es OK pero no hay JSON (ej. 204 No Content), no es un error.
+					}
+
+					if (!response.ok) {
+						throw new Error(data.msg || 'Ocurrió un error durante el registro.');
+					}
+
+					// 5. Guardar token y mensaje para mostrar DESPUÉS de la redirección
+					localStorage.setItem('token', data.token);
+					localStorage.setItem('toastMessage', '¡Registro exitoso! Bienvenido.');
+					localStorage.setItem('toastType', 'success');
+					
+					window.location.href = '/dashboard';
+
+				} catch (error) {
+					const errorMessage = error instanceof Error ? error.message : 'Un error desconocido ocurrió';
+					showToast(`Error: ${errorMessage}`, 'error');
+				}
+			});
+		}
+
+		// Se ejecuta en la carga inicial de la página y en cada navegación del lado del cliente
+		document.addEventListener('astro:page-load', setupRegisterPage);
+	</script>
+</Layout>

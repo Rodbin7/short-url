@@ -1,0 +1,124 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Acortador de Links">
+	<main class="container mx-auto px-4 pt-24 pb-12">
+		<div class="text-center">
+			<h1 class="text-5xl md:text-7xl font-extrabold tracking-tighter mb-4 bg-gradient-to-r from-blue-500 to-purple-500 text-transparent bg-clip-text">
+				Acorta tus Enlaces
+			</h1>
+			<p class="text-lg text-slate-400 max-w-xl mx-auto">Una herramienta simple, rápida y moderna para transformar URLs largas en enlaces cortos y manejables.</p>
+		</div>
+
+		<form id="shorten-form" class="max-w-3xl mx-auto mt-12 bg-slate-800/50 border border-white/10 p-6 rounded-xl shadow-lg">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                    <label for="originalUrl" class="block text-sm font-medium text-slate-300 mb-2">URL Original</label>
+				    <input type="url" id="originalUrl" name="originalUrl" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="https://ejemplo.com/un/enlace/muy/largo/para/recordar" required />
+                </div>
+                <div>
+                    <label for="customAlias" class="block text-sm font-medium text-slate-300 mb-2">Alias Personalizado (Opcional)</label>
+                    <div class="flex items-center">
+                        <span class="px-3 py-3 bg-slate-900 border border-r-0 border-slate-700 rounded-l-lg text-slate-400">linky/r/</span>
+				        <input type="text" id="customAlias" name="customAlias" class="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" placeholder="mi-portfolio" />
+                    </div>
+                </div>
+                <div class="self-end">
+				    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 h-full">Acortar URL</button>
+                </div>
+			</div>
+		</form>
+
+		<div id="result" class="max-w-2xl mx-auto mt-6 text-center hidden"></div>
+	</main>
+
+	<script>
+		function setupIndexPage() {
+			// Proteger la ruta
+			const token = localStorage.getItem('token');
+			if (!token) {
+				window.location.href = '/login';
+				return;
+			}
+
+			const shortenForm = document.getElementById('shorten-form');
+			if (!shortenForm) return;
+
+			// Lógica del formulario
+			shortenForm.addEventListener('submit', async (e) => {
+				e.preventDefault();
+
+				const form = e.target as HTMLFormElement;
+				const originalUrl = (form.elements.namedItem('originalUrl') as HTMLInputElement).value;
+				const customAlias = (form.elements.namedItem('customAlias') as HTMLInputElement).value;
+				const resultDiv = document.getElementById('result');
+				
+				// resultDiv.innerHTML = '<p class="text-slate-400">Procesando...</p>'; // Ya no se usa
+
+                const body = { originalUrl };
+                if (customAlias) {
+                    body.customAlias = customAlias;
+                }
+
+				try {
+					const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/shorten`, {
+						method: 'POST',
+						headers: {
+							'Content-Type': 'application/json',
+							'x-auth-token': token,
+						},
+						body: JSON.stringify(body),
+					});
+
+					const data = await response.json();
+
+					if (!response.ok) {
+						throw new Error(data.error || data.msg || 'Ocurrió un error');
+					}
+
+                    const code = data.customAlias || data.shortCode;
+					const shortUrl = `${window.location.protocol}//${window.location.host}/r/${code}`;
+					
+					// Mostrar el enlace acortado en el resultDiv (ahora visible)
+					resultDiv.innerHTML = `
+						<div class="mt-2 bg-slate-800 p-4 rounded-lg flex items-center justify-between gap-4 animate-fade-in">
+							<a href="${shortUrl}" target="_blank" class="text-blue-400 hover:underline truncate">${shortUrl}</a>
+							<button id="copy-btn" class="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg text-sm whitespace-nowrap">Copiar</button>
+						</div>
+					`;
+					resultDiv.classList.remove('hidden');
+
+					window.showToast('¡Enlace acortado con éxito!', 'success');
+
+					document.getElementById('copy-btn').addEventListener('click', (e) => {
+						const button = e.target as HTMLButtonElement;
+						navigator.clipboard.writeText(shortUrl);
+						button.innerText = '¡Copiado!';
+						setTimeout(() => { button.innerText = 'Copiar'; }, 2000);
+					});
+
+				} catch (error) {
+					// resultDiv.innerHTML = `<p class="text-red-400">Error: ${error.message}</p>`; // Ya no se usa
+					window.showToast(`Error: ${error.message}`, 'error');
+				}
+			});
+		}
+
+		// Ejecutar en la carga inicial
+		setupIndexPage();
+
+		// Ejecutar en navegaciones del lado del cliente
+		document.addEventListener('astro:page-load', setupIndexPage);
+	</script>
+
+	<style>
+		@keyframes fade-in {
+			from { opacity: 0; transform: translateY(10px); }
+			to { opacity: 1; transform: translateY(0); }
+		}
+		.animate-fade-in {
+			animation: fade-in 0.5s ease-out forwards;
+		}
+	</style>
+</Layout>

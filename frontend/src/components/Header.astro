@@ -1,0 +1,43 @@
+<header class="bg-gray-800/50 backdrop-blur-sm border-b border-white/10 sticky top-0 z-50">
+    <nav class="container mx-auto px-4 flex justify-between items-center py-4">
+        <a href="/" class="text-2xl font-bold text-white">Linky</a>
+        <div id="nav-links"></div>
+    </nav>
+</header>
+
+<script>
+    function setupHeader() {
+        const navLinks = document.getElementById('nav-links');
+        if (!navLinks) return;
+
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            // Usuario autenticado
+            navLinks.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <a href="/dashboard" class="text-gray-300 hover:text-white transition">Mis Enlaces</a>
+                    <button id="logout-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">Logout</button>
+                </div>
+            `;
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            });
+        } else {
+            // Usuario no autenticado
+            navLinks.innerHTML = `
+                <div class="flex items-center gap-4">
+                    <a href="/login" class="text-gray-300 hover:text-white transition">Login</a>
+                    <a href="/register" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">Register</a>
+                </div>
+            `;
+        }
+    }
+
+    // Ejecutar en la carga inicial
+    setupHeader();
+
+    // Ejecutar en navegaciones del lado del cliente
+    document.addEventListener('astro:page-load', setupHeader);
+</script>
