@@ -28,7 +28,7 @@ import Toast from '../components/Toast.astro';
             pageContainer.dataset.initialized = 'true';
         }
 
-        // Helper para mostrar notificaciones
+
         const showToast = (message, type) => {
             if (typeof window.showToast === 'function') {
                 window.showToast(message, type);
@@ -37,11 +37,10 @@ import Toast from '../components/Toast.astro';
             }
         };
 
-        // 1. Mostrar toast de registro si existe en localStorage
+
         const toastMessage = localStorage.getItem('toastMessage');
         const toastType = localStorage.getItem('toastType') || 'info';
         if (toastMessage) {
-            // Usamos un pequeño retraso para asegurar que el componente Toast esté listo
             setTimeout(() => {
                 showToast(toastMessage, toastType);
                 localStorage.removeItem('toastMessage');
@@ -49,7 +48,6 @@ import Toast from '../components/Toast.astro';
             }, 100);
         }
 
-        // 2. Redirigir si no hay token
         const token = localStorage.getItem('token');
         if (!token) {
             window.location.href = '/login';
@@ -60,11 +58,10 @@ import Toast from '../components/Toast.astro';
         const loadingState = document.getElementById('loading-state');
 
         async function fetchLinks() {
-            // Prevenir que se añadan listeners de clic múltiples veces
             if (!linksContainer || linksContainer.dataset.listenersAttached === 'true') return;
             
             try {
-                const response = await fetch(`/api/links`, {
+                const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/links`, {
                     headers: { 'x-auth-token': token }
                 });
 
@@ -130,7 +127,7 @@ import Toast from '../components/Toast.astro';
                         const linkId = deleteButton.getAttribute('data-link-id');
                         if (linkId && confirm('¿Estás seguro de que quieres eliminar este enlace?')) {
                             try {
-                                const deleteResponse = await fetch(`/api/links/${linkId}`, {
+                                const deleteResponse = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/links/${linkId}`, {
                                     method: 'DELETE',
                                     headers: { 'x-auth-token': token }
                                 });
@@ -160,7 +157,6 @@ import Toast from '../components/Toast.astro';
         fetchLinks();
     }
 
-    // 3. Corregido: Usar solo el listener de Astro para evitar doble ejecución
+
     document.addEventListener('astro:page-load', setupDashboardPage);
-    document.addEventListener('DOMContentLoaded', setupDashboardPage);
 </script>

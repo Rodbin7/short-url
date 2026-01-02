@@ -35,7 +35,6 @@ import Toast from '../components/Toast.astro';
 			}
 			registerForm.dataset.initialized = 'true';
 
-			// 1. Redirigir si el usuario ya está logueado
 			const token = localStorage.getItem('token');
 			if (token) {
 				window.location.href = '/dashboard';
@@ -45,7 +44,6 @@ import Toast from '../components/Toast.astro';
 			registerForm.addEventListener('submit', async (e) => {
 				e.preventDefault();
 
-				// Helper para mostrar notificaciones
 				const showToast = (message, type) => {
 					if (typeof window.showToast === 'function') {
 						window.showToast(message, type);
@@ -60,7 +58,6 @@ import Toast from '../components/Toast.astro';
 				const email = emailInput instanceof HTMLInputElement ? emailInput.value : '';
 				const password = passwordInput instanceof HTMLInputElement ? passwordInput.value : '';
 
-				// 2. Validación de cliente antes de enviar
 				if (!email || !password) {
 					showToast('Por favor, completa todos los campos.', 'error');
 					return;
@@ -71,23 +68,20 @@ import Toast from '../components/Toast.astro';
 				}
 
 				try {
-					const response = await fetch(`/api/auth/register`, {
+					const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/auth/register`, {
 						method: 'POST',
 						headers: { 'Content-Type': 'application/json' },
 						body: JSON.stringify({ email, password }),
 					});
 
-					// 4. Manejo de errores de red y respuestas no-JSON
 					let data = {};
 					try {
-						// Intentamos parsear el JSON, pero no fallamos si el cuerpo está vacío o no es JSON
 						data = await response.json();
 					} catch (jsonError) {
 						if (!response.ok) {
-							// Si la respuesta es un error (ej. 500) y no tiene JSON, creamos un error genérico
+
 							throw new Error(`Error del servidor: ${response.status} ${response.statusText}`);
 						}
-						// Si la respuesta es OK pero no hay JSON (ej. 204 No Content), no es un error.
 					}
 
 					if (!response.ok) {
@@ -108,7 +102,6 @@ import Toast from '../components/Toast.astro';
 			});
 		}
 
-		// Se ejecuta en la carga inicial de la página y en cada navegación del lado del cliente
 		document.addEventListener('astro:page-load', setupRegisterPage);
 	</script>
 </Layout>

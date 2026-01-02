@@ -1,0 +1,7 @@
+---
+const { code } = Astro.params;
+
+const backendUrl = `${import.meta.env.PUBLIC_API_URL}/r/${code}`;
+
+return Astro.redirect(backendUrl);
+---

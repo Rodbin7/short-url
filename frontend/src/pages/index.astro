@@ -54,12 +54,8 @@ import Layout from '../layouts/Layout.astro';
 				const customAlias = (form.elements.namedItem('customAlias') as HTMLInputElement).value;
 				const resultDiv = document.getElementById('result');
 				
-				// resultDiv.innerHTML = '<p class="text-slate-400">Procesando...</p>'; // Ya no se usa
 
-                const body = { originalUrl };
-                if (customAlias) {
-                    body.customAlias = customAlias;
-                }
+                const body = { originalUrl, ...(customAlias && {customAlias}) };
 
 				try {
 					const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/api/shorten`, {
@@ -78,9 +74,8 @@ import Layout from '../layouts/Layout.astro';
 					}
 
                     const code = data.customAlias || data.shortCode;
-					const shortUrl = `${window.location.protocol}//${window.location.host}/r/${code}`;
+					const shortUrl = `${window.location.origin}/r/${code}`;
 					
-					// Mostrar el enlace acortado en el resultDiv (ahora visible)
 					resultDiv.innerHTML = `
 						<div class="mt-2 bg-slate-800 p-4 rounded-lg flex items-center justify-between gap-4 animate-fade-in">
 							<a href="${shortUrl}" target="_blank" class="text-blue-400 hover:underline truncate">${shortUrl}</a>
@@ -105,10 +100,10 @@ import Layout from '../layouts/Layout.astro';
 			});
 		}
 
-		// Ejecutar en la carga inicial
+
 		setupIndexPage();
 
-		// Ejecutar en navegaciones del lado del cliente
+
 		document.addEventListener('astro:page-load', setupIndexPage);
 	</script>
 

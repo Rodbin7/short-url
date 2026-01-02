@@ -1,43 +1,32 @@
-# Astro Starter Kit: Minimal
+#Linky - Acortador de Enlaces
 
-```sh
-npm create astro@latest -- --template minimal
-```
+Un sistema Full-Stack que permite a los usuarios registrarse, acortar URLs largas y gestionar sus estadísticas de clics en tiempo real.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+#Funciones Clave
 
-## 🚀 Project Structure
+* **Registro y Login:** Seguridad con tokens (JWT).
 
-Inside of your Astro project, you'll see the following folders and files:
+* **Dashboard:** Panel para ver cuántos clics reciben tus links.
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+* **Rápido y Seguro:** Generación de códigos únicos con NanoID.
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+* **Diseño Moderno:** Interfaz responsiva hecha con Tailwind CSS.
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+#Tecnologías Usadas
 
-Any static assets, like images, can be placed in the `public/` directory.
+* **Frontend:** Astro (rápido y optimizado).
 
-## 🧞 Commands
+* **Backend:** Node.js y Express.
 
-All commands are run from the root of the project, from a terminal:
+* **Base de Datos:** MongoDB.
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+* **Hosting:** Netlify (Front) y Render (Back).
 
-## 👀 Want to learn more?
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+#Cómo probarlo
+
+* Visita el link del proyecto:
+
+* Regístrate y crea tu primer enlace corto.
+
+* ¡Mira cómo aumentan los clics en tu panel!
