@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 const { code } = Astro.params;
 
 const backendUrl = `${import.meta.env.PUBLIC_API_URL}/r/${code}`;
