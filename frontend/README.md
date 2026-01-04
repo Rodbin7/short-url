@@ -1,8 +1,8 @@
-#Linky - Acortador de Enlaces
+# Acortador de Enlaces
 
 Un sistema Full-Stack que permite a los usuarios registrarse, acortar URLs largas y gestionar sus estadísticas de clics en tiempo real.
 
-#Funciones Clave
+## Funciones Clave
 
 * **Registro y Login:** Seguridad con tokens (JWT).
 
@@ -12,7 +12,7 @@ Un sistema Full-Stack que permite a los usuarios registrarse, acortar URLs larga
 
 * **Diseño Moderno:** Interfaz responsiva hecha con Tailwind CSS.
 
-#Tecnologías Usadas
+## Tecnologías Usadas
 
 * **Frontend:** Astro (rápido y optimizado).
 
@@ -23,9 +23,9 @@ Un sistema Full-Stack que permite a los usuarios registrarse, acortar URLs larga
 * **Hosting:** Netlify (Front) y Render (Back).
 
 
-#Cómo probarlo
+## Cómo probarlo
 
-* Visita el link del proyecto:
+* Visita el link del proyecto: [https://short-url-linky.netlify.app/]
 
 * Regístrate y crea tu primer enlace corto.
 
